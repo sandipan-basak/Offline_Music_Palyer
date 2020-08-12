@@ -1,14 +1,14 @@
-# import os
+import os
 from datetime import datetime
 from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from googleapiclient.discovery import build
-# from apiclient.discovery import build
 from pytube import YouTube
-# from django.db.models import F
 import requests
-# from django.http import HttpResponse
 from OfflinePlaylist.models import Track, Album, Artist, Playlists, Song, Category
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MEDIA_DIR = os.path.join(BASE_DIR,'media')
 
 flags = [False, False, False]
 restart = [False]
@@ -17,12 +17,9 @@ def test(request):
     playlist = Playlists.objects.all()
     songs = Song.objects.all()
 
-    # custom_dict = {"text":"Hello, its working..!!"}
     return render(request, 'OfflinePlaylist/test.html', context={'playlists':playlist,
                                                                   'songs':songs})
 
-
-# Create your views here.
 def playlists(request):
 
     api_key = 'AIzaSyCrFKxRUCg3-IVk8XX-NN4cQwTfxsZz_j8'
@@ -31,10 +28,6 @@ def playlists(request):
     playlist = Playlists.objects.all()
     song_list = ''
     youtube = build('youtube','v3',developerKey=api_key)
-    
-    # print(yt.title)
-    # stream = yt.streams.first()
-    # stream.download("\Tracks")
 
     playlist_name = Playlists.objects.first().name
     if request.method == "POST":
@@ -57,14 +50,13 @@ def playlists(request):
             song_item = Song.objects.get(id=song_id)
             song_item.downloaded = True
             song_item.save()
-            # youtube = build('youtube','v3',developerKey=api_key)
             search_query = song_item.track_name+'|'+song_item.artist_name
             youtube = build('youtube','v3',developerKey=api_key)
             # pylint: disable=maybe-no-member
             video_item = youtube.search().list(q=search_query,part='snippet',type='video',maxResults=1).execute()
             video_link = 'https://www.youtube.com/watch?v='+video_item['items'][0]['id']['videoId']
             stream_item = YouTube(video_link).streams.get_audio_only()
-            abs_path = 'C:\\Users\\sbasak\\Documents\\DJANGO_COURSE_1.xx\\Django_Music\\OfflineMusic\\media\\downloaded_songs\\'
+            abs_path = MEDIA_DIR + '\\downloaded_songs\\'
             stream_item.download(abs_path)
             playlist_name = song_item.playlist.name
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
@@ -85,7 +77,6 @@ def index(request):
         "Authorization": f"Bearer {r.json()['access_token']}"
     }
     endpoint = "https://api.spotify.com/v1/search"
-    # print(data)
     playlist = Playlists.objects.all()
     songs = Song.objects.all()
     track_list = Track.objects.all()
@@ -110,12 +101,10 @@ def index(request):
                 category.name = 'Track'
                 category.save()             
                 track_name = request.POST.get('Input')
-                # print(track_name)
                 data = urlencode({"q":track_name, "type": "track"})
                 lookup_url = f"{endpoint}?{data}"
                 search = requests.get(lookup_url, headers=headers).json()
                 track_list.delete()
-                # print(len(search['tracks']['items']))
                 for item in search['tracks']['items']:
                     track_item = Track(id=item['id'], name=item['name'], album=item['album']['name'], artist=item['artists'][0]['name'])
                     track_item.save()
@@ -151,7 +140,6 @@ def index(request):
                 search = requests.get(lookup_url, headers=headers).json()
                 album_list.delete()
                 for item in search['albums']['items']:
-                    # print(item['name'])
                     album_item = Album(name=item['name'], id=item['id'], artist=item['artists'][0]['name'])
                     album_item.save()
                 return redirect('/')
@@ -172,7 +160,6 @@ def index(request):
             album_list.delete()
             artist_name = search['items'][0]['artists'][0]['name']
             for item in search['items']:
-                # print(item['name'])
                 album_item = Album(name=item['name'], id=item['id'], artist=artist_name)
                 album_item.save()
 
@@ -187,8 +174,6 @@ def index(request):
             if len(album_ids) == 0:
                 return redirect('/')
 
-            # print(album_ids)
-            # album_list.delete()
             for album_id in album_ids:
                 album = Album.objects.get(id=album_id)
                 data = urlencode({"id":album_id, "limit":50})
@@ -199,13 +184,10 @@ def index(request):
                     track_item = Track(id=item['id'], name=item['name'], artist=item['artists'][0]['name'], album=album.name)
                     track_item.save()
                 
-                # album = Album(name=,artist=,id=album_id)
             for album in album_list:
                 if album.id not in album_ids:
                     album_list.get(id=album.id).delete()
 
-            # print(len(album_list))
-            
             return redirect('/')
 
         elif 'AddSong' in request.POST:
@@ -230,17 +212,12 @@ def index(request):
                 return redirect('/')
 
             for track_id in track_ids:
-                track_item = Track.objects.get(id=track_id)
-                # print(track_item.name)
-                print (playlist_list)
-                
+                track_item = Track.objects.get(id=track_id)              
+
                 for playlist in playlist_list:
                     playlist_item = Playlists.objects.get(name=playlist)
                     song_item = Song.objects.filter(track_name=track_item.name).filter(playlist__id=playlist_item.id)
-                    # print(song_list)
-                    # song_list1 = song_list.filter(track_name=track_item.name)
-                    print(song_item)
-                    # print("song list check... : ", Song.objects.filter(track_name=track_item.name).filter().exists())
+
                     if song_item.exists():
                         continue
                     Song.objects.create(track_name=track_item.name, 
@@ -249,9 +226,7 @@ def index(request):
                                         playlist=playlist_item)
 
             restart[0] = True
-            
             return redirect('/')
-
             
     return render(request, 'index.html', context={'tracks':track_list,
                                                                   'artists':artist_list,
