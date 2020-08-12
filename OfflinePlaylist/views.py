@@ -227,8 +227,7 @@ def index(request):
             restart[0] = True
             
             return redirect('/')
-
-            
+     
     return render(request, 'index.html', context={'tracks':track_list,
                                                                   'artists':artist_list,
                                                                   'albums':album_list,
