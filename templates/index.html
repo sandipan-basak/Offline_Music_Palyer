@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+    <style> 
+        /*add full-width input fields*/ 
+        /* input[type=text], 
+        input[type=password] { 
+            width: 100%; 
+            padding: 12px 20px; 
+            margin: 8px 0; 
+            display: inline-block; 
+            border: 2px solid #ccc; 
+            box-sizing: border-box;  
+        } */
+        /* set a style for all buttons*/ 
+        /* button { 
+            background-color: green; 
+            color: white; 
+            padding: 14px 20px; 
+            margin: 8px 0; 
+            cursor: pointer; 
+            width: 100%; 
+        }  */
+        /*set styles for the cancel button*/ 
+        /* .cancelbtn { 
+            padding: 14px 20px; 
+            background-color: #FF2E00;  
+        } */
+        /*float cancel and signup buttons and add an equal width*/ 
+        .cancelbtn, 
+        .AddSong{ 
+            float: left; 
+            width: 50% 
+        } 
+        /*add padding to container elements*/ 
+        .container { 
+            padding: 16px; 
+        } 
+        /*define the modal’s background*/ 
+          
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgb(0, 0, 0); 
+            background-color: rgba(0, 0, 0, 0.8); 
+            padding-top: 60px; 
+        } 
+        /*define the modal-content background*/ 
+        
+        .modal-content { 
+            background-color: #fefefe; 
+            margin: 5% auto 15% auto; 
+            border: 1px solid #888; 
+            width: 80%; 
+        } 
+        /*define the close button*/ 
+          
+        /* .close { 
+            position: absolute; 
+            right: 35px; 
+            top: 15px; 
+            color: #000; 
+            font-size: 40px; 
+            font-weight: bold; 
+        }  */
+        /*define the close hover and focus effects*/ 
+          
+        /* .close:hover, 
+        .close:focus { 
+            color: red; 
+            cursor: pointer; 
+        }  */
+          
+        .clearfix::after { 
+            content: ""; 
+            clear: both; 
+            display: table; 
+        }
+    
+        .playlists { 
+            border:2px solid #ccc;
+            width:300px;
+            height: 100px;
+            overflow-y: scroll; 
+        } 
+          
+        /* @media screen and (max-width: 300px) { 
+            .cancelbtn, 
+            .signupbtn { 
+                width: 100%; 
+            } 
+        }*/
+    </style> 
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search</title>
+</head>
+<body>
+    <h1>Search Page</h1>
+    <form action="" method="POST">
+    {% csrf_token %}
+        <div class = "category_div">
+            <label for="Options"> Select out of the 3 : </label>
+            <select name="categoryOption" >
+                <option value="Track">Track</option>
+                <option value="Artist">Artist</option>
+                <option value="Album">Album</option>
+            </select>
+            <br><br>
+        </div>
+        
+        <div class="Search">
+
+            <label for="Search">Enter the name here </label>
+            <input type="text" name="Input">
+            <br><br>
+            <button class="selectCategory" name="selectCategory" type="submit">Search</button>
+        </div>
+
+        {% if restart != True %}
+            {% if category.name == 'Track' %}
+                <div>
+                    <h2>Name - Artist - Album</h2>
+
+                        {% for track in tracks %}
+                            <li class='track_item'>
+                                <label for="{{ track.id }}"></label>
+                                <p><input type="checkbox" class="checkedTracks" name="checkedTracks" id="{{ track.id }}" value="{{ track.id }}">{{ track.name }} - {{ track.artist }} - {{ track.album }}</p>
+                            </li>
+                        {% endfor %}
+                </div>
+                <button type="button" onclick=OpenPopUp() style="width:auto;">Add Songs to Playlist</button> 
+
+            {% elif category.name == 'Artist'%}
+                <div>
+                    <h3>Artists</h3>
+                        {% for artist in artists %}
+                            <li class='artist_item'>
+                                <label for="{{ track.id }}"></label>
+                                <p><input type="radio" class="checkedArtist" name="checkedArtist" id="{{ artist.id }}" value="{{ artist.id }}">{{ artist.name }} </p>
+                            </li>
+                        {% endfor %}
+                    
+                    <button class="getAlbums" name="getAlbums" type="submit">Get Albums</button>
+                    {% if flags.0 == True %}
+                        {% for album in albums %}
+                            <li class='album_item'>
+                                <label for="{{ album.id }}"></label>
+                                <p><input type="checkbox" class="checkedAlbums" name="checkedAlbums" id="{{ album.id }}" value="{{ album.id }}">{{ album.name }}</p>
+                                
+                            </li>
+                        {% endfor %}
+
+                        <button class="getTracks" name="getTracks" type="submit">Get Tracks</button>
+                    {% endif %}
+                        
+                    {% if flags.1 == True %}
+                        <h2> Tracks </h2>
+                        {% for album in albums %}
+                            <h3>Album: {{ album.name }} </h3>
+                        
+                            {% for track in tracks %}                                              
+                                <li class='track_item'>
+                                    <label for="{{ track.id }}"></label>
+                                    <p><input type="checkbox" class="checkedTracks" name="checkedTracks" id="{{ track.id }}" value="{{ track.id }}">{{ track.name }} - {{ track.artist }} - {{ track.album }}</p>
+                                    <p>
+                                </li>
+                            {% endfor %}
+                        {% endfor %}
+                        <button type="button" onclick=OpenPopUp() style="width:auto;">Add Songs to Playlist</button> 
+                    {% endif %}
+                </div>
+
+            {% elif category.name == 'Album' %}
+                <div>
+                    
+                    {% if flags.0 == True %}
+                        <h3>Albums - Artists</h3>
+                        {% for album in albums %}
+                            <li class='album_item'>
+                                <label for="{{ album.id }}"></label>
+                                <p><input type="checkbox" class="checkedAlbums" name="checkedAlbums" id="{{ album.id }}" value="{{ album.id }}">{{ album.name}} - {{ album.artist}}</p> 
+                            </li>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <button class="getTracks" name="getTracks" type="submit">Get Tracks</button>
+                    {% if flags.1 == True %}
+                        {% for album in albums %}
+                            <h3>Album: {{ album.name }} </h3>
+                        
+                            {% for track in tracks %}                                              
+                                <!-- {# if track.album != curr_album %} -->
+                                <!-- {# curr_album=track.album #} -->
+                                <!-- <h3>Album: {{ track.album }} </h3> -->
+                            {# endif #}                      
+                                <li class='track_item'>
+                                    <label for="{{ track.id }}"></label>
+                                    <p><input type="checkbox" class="checkedTracks" name="checkedTracks" id="{{ track.id }}" value="{{ track.id }}">{{ track.name }} - {{ track.artist }} - {{ track.album }}</p>
+                                    <p>
+                                </li>
+                            {% endfor %}
+                        {% endfor %}
+                        <button type="button" onclick=OpenPopUp() style="width:auto;">Add Songs to Playlist</button>
+                    {% endif %}
+                </div>
+                
+            {% endif %}
+        {% endif %}
+
+        <div id="id01" class="modal"> 
+            <!-- <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">X</span>  -->
+            <div class="modal-content animate"> 
+                <div class="container"> 
+                    <label><b>PLaylists</b></label> 
+                    <div class="playlists">
+                        {% for playlist in playlists %}
+                            <input type="checkbox" name = "checkedPlaylists" value="{{ playlist.name }}"/> {{ playlist.name}} <br/>
+                        {% endfor%}
+                        <div class="clearfix">
+                            <button type="button" onclick="openText()" id="AddPlaylist" class="AddPlaylist">Create a new Playlist</button> 
+                        </div>
+                    </div>
+                    <div class="clearfix"> 
+                        <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button> 
+                        <button type="submit" class="AddSong" name="AddSong">Add Songs</button> 
+                    </div> 
+                </div> 
+            </div> 
+        </div> 
+
+    </form>
+    
+    <!-- <div id="id01" class="modal"> 
+        <!-- <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">X</span>
+        <form class="modal-content animate" action=""> 
+            <div class="container"> 
+                <label><b>PLaylists</b></label> 
+                <div class="playlists">
+                    {% for playlist in playlists %}
+                        <input type="checkbox" name = "checkedPlalyists"/> {{ playlist.name}} <br/>
+                    {% endfor%}
+                    <div class="clearfix"></div>
+                        <button type="button" onclick="openText()" id="AddPlaylist" class="AddPlaylist">Create a new Playlist</button> 
+                    </div>
+                </div>
+                <div class="clearfix"> 
+                    <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button> 
+                    <button type="submit" class="AddSong" name="AddSong">Add Songs</button> 
+                </div> 
+            </div> 
+        </div> 
+    </div>  -->
+    
+    <script>
+        
+        function regenerateButton() {
+            var t = document.querySelector('#NewPlaylist');
+            var b = document.createElement('button');
+            b.type = "button";
+            b.addEventListener("click", function () {openText()});
+            b.innerHTML = "Create a new Playlist";
+            b.id="AddPlaylist";
+            b.className="AddPlaylist";
+            b.name="AddPlaylist";
+            t.parentNode.replaceChild(b,t);
+        }
+
+        function openText() {
+            var b = document.querySelector('#AddPlaylist');
+            var t = document.createElement('input');
+            t.placeholder = "Playlist Name....";
+            t.className="NewPlaylist";
+            t.id="NewPlaylist";
+            t.name="NewPlaylist";
+            b.parentNode.replaceChild(t,b);
+        }
+
+        function OpenPopUp() {
+            document.getElementById('id01').style.display='block';
+
+
+            if (document.querySelector('.AddPlaylist') != null)
+                console.log(document.querySelector('.AddPlaylist'))
+                regenerateButton();
+        }
+
+        // function showContent() {
+
+        //     const template = document.getElementsByTagName("template")[0];
+        //     const node = document.importNode(template.content, true);
+        //     document.body.appendChild(node);
+
+        //     if (document.querySelector('.AddPlaylist') != null)
+        //         console.log(document.querySelector('.AddPlaylist'))
+        //         regenerateButton();
+        // }
+
+        var modal = document.getElementById('id01'); 
+  
+        window.addEventListener("click",function(event) { 
+            if (event.target == modal) { 
+                modal.style.display = "none"; 
+            } 
+        } ) 
+    </script>
+
+</body>
+</html>

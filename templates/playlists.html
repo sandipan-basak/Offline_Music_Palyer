@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search</title>
+</head>
+<body>
+  <form action="" method="POST">
+    {% csrf_token %}
+    <div class="contianter" >
+      <div style="width: 50%; float: left;" class="PlasylistDisplay">
+        <h2>Playlist</h2>
+        <div class="list">
+          {% for playlist in playlists %}
+            <li class="listItem" name="listItem"> <button class="ViewPlaylist" name="ViewPlaylist" value="{{ playlist.name }}" type="submit"> {{ playlist.name }} </button> </li>
+          {% endfor %}
+        </div>
+      </div>
+      <div style="width: 50%; float: right;" class="SongDisplay">
+        {% if songs|length > 0 %}
+          <h2>Playlist: {{ playlistName }}</h2>
+          <h3>Name - Artist - Album</h3>
+          {% for song in songs %}
+          
+          <ul style="list-style-type: none;">
+            <li style="width:100%">
+              <div class="SongItem" style="width: 100%; height: 20px; margin:0; padding:3;">
+                <div class="SongName" style = "width:50%; height:100%; float:left;">
+                  <p class="SongId" style="margin:0;">{{song.track_name}} - {{song.artist_name}} - {{song.album_name}}</p> 
+                </div>
+                <div class="ModifySong" style = "width:50%; height:100%; float:right; padding:1">
+                  <div class="DeleteSong" style = "width:7%; height:100%; float:left;">
+                    <button type="submit" class="deleteSong" name="deleteSong" value="{{ song.id }}"> X </button>
+                  </div>
+                    {% if song.downloaded == False %}
+                      <div class="DownloadSong" style = "width:7%; height:100%; float:left;">
+                        <button type="submit" class="downloadSong" name="downloadSong" value="{{ song.id }}"> D </button>
+                      </div>
+                    {% else %}
+                      <div class="PlaySong" style = "width:7%; height:100%; float:left;">
+                        <button type="button" class="playSong" name="playSong" value="{{ song.id }}"> Play </button>
+                      </div>
+                    {% endif %}
+                </div>
+              </div>
+            </li>
+          </ul>
+          {% endfor %}
+        {% else %}
+          <h2>Playlist View</h2>
+          <p>Add songs to playlist... </p>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+</body>
+</html>
