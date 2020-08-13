@@ -13,13 +13,29 @@ MEDIA_DIR = os.path.join(BASE_DIR,'media')
 flags = [False, False, False]
 restart = [False]
 
+API_ENDPOINT = "https://accounts.spotify.com/api/token"
+
+client_data = {'client_id':'2e872b10213743bfb2e15254bbfd36f7', 
+        'client_secret':'409874318f474150a77c015c565e3747', 
+        'grant_type':'client_credentials' }
+r = requests.post(url = API_ENDPOINT, data = client_data) 
+headers = {
+    "Authorization": f"Bearer {r.json()['access_token']}"
+}
+# endpoint = "https://api.spotify.com/v1/search"
+
 def test(request):
+    
     playlist = Playlists.objects.all()
     songs = Song.objects.all()
 
-    return render(request, 'OfflinePlaylist/test.html', context={'playlists':playlist,
-                                                                  'songs':songs})
+    return render(request, 'test.html', context={'playlists':playlist,
+                                                 'songs':songs})
 
+def get_playlist(request):
+
+    content = {'text':'hello'}
+    return render(request, 'GetPlaylists.html', context=content)
 
 def playlists(request):
 
@@ -63,20 +79,11 @@ def playlists(request):
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
 
     return render(request, 'playlists.html', context={'playlists':playlist,
-                                                                  'songs':song_list,
-                                                                  "playlistName":playlist_name })
+                                                      'songs':song_list,
+                                                      'playlistName':playlist_name })
 
 def index(request):
 
-    API_ENDPOINT = "https://accounts.spotify.com/api/token"
-
-    data = {'client_id':'2e872b10213743bfb2e15254bbfd36f7', 
-            'client_secret':'409874318f474150a77c015c565e3747', 
-            'grant_type':'client_credentials' }
-    r = requests.post(url = API_ENDPOINT, data = data) 
-    headers = {
-        "Authorization": f"Bearer {r.json()['access_token']}"
-    }
     endpoint = "https://api.spotify.com/v1/search"
     playlist = Playlists.objects.all()
     songs = Song.objects.all()
@@ -229,12 +236,10 @@ def index(request):
             return redirect('/')
      
     return render(request, 'index.html', context={'tracks':track_list,
-                                                                  'artists':artist_list,
-                                                                  'albums':album_list,
-                                                                  'category':category,
-                                                                  'flags':flags,
-                                                                  'playlists':playlist,
-                                                                  'songs':songs,
-                                                                  'restart':restart})
-
-
+                                                  'artists':artist_list,
+                                                  'albums':album_list,
+                                                  'category':category,
+                                                  'flags':flags,
+                                                  'playlists':playlist,
+                                                  'songs':songs,
+                                                  'restart':restart})
