@@ -22,7 +22,6 @@ r = requests.post(url = API_ENDPOINT, data = client_data)
 headers = {
     "Authorization": f"Bearer {r.json()['access_token']}"
 }
-# endpoint = "https://api.spotify.com/v1/search"
 
 def test(request):
     
@@ -33,6 +32,25 @@ def test(request):
                                                  'songs':songs})
 
 def get_playlist(request):
+
+    endpoint = "https://api.spotify.com/v1/search"
+
+    if request.method == "POST":
+        if "GetUserId" in request.POST:
+            user_id = request.POST.get('UserId')
+            endpoint = "https://api.spotify.com/v1/users"
+            data = urlencode({"user_id":user_id, "limit":50})
+            lookup_url = f"{endpoint+'/'+user_id+'/'+'playlists'}?{data}"
+            search = requests.get(lookup_url, headers=headers).json()
+            playlist_list = list()
+            for item in search['items']:
+                playlist_list.append(item['name'])
+                track_item = Track(id=item['id'], name=item['name'], album=item['album']['name'], artist=item['artists'][0]['name'])
+                track_item.save()
+            return redirect('/')
+    
+
+
 
     content = {'text':'hello'}
     return render(request, 'GetPlaylists.html', context=content)
