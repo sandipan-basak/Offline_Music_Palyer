@@ -21,7 +21,8 @@ from OfflinePlaylist import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
-    path('playlists/', views.playlists, name = 'playlist'),
-    path('test/', views.test, name = 'test'),
+    path('playlists/', views.playlists, name='playlist'),
+    path('test/', views.test, name='test'),
+    path('GetPlaylists/', views.test, name='test'),
     #path(r'^OfflinePlaylist/', include('OfflinePlaylist.urls')),
 ]
