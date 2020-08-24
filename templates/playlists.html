@@ -10,7 +10,7 @@
     {% csrf_token %}
     <div class="contianter" >
       <div style="width: 50%; float: left;" class="PlasylistDisplay">
-        <h2>Playlist</h2>
+        <h2>Playlists</h2>
         <div class="list">
           {% for playlist in playlists %}
             <li class="listItem" name="listItem"> <button class="ViewPlaylist" name="ViewPlaylist" value="{{ playlist.name }}" type="submit"> {{ playlist.name }} </button> </li>

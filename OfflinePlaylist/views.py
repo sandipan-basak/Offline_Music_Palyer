@@ -24,6 +24,8 @@ headers = {
     "Authorization": f"Bearer {r.json()['access_token']}"
 }
 
+playlist_list = []
+
 def test(request):
     
     playlist = Playlists.objects.all()
@@ -32,48 +34,88 @@ def test(request):
     return render(request, 'test.html', context={'playlists':playlist,
                                                  'songs':songs})
 
+def get_songs_from_playlist_id(playlist_id):
+    endpoint = "https://api.spotify.com/v1/playlists"
+    data = urlencode({"playlist_id":playlist_id,"limit":100})
+    lookup_url = f"{endpoint+'/'+playlist_id+'/'+'tracks'}?{data}"
+    search = requests.get(lookup_url, headers=headers).json()
+    song_list = []
+    while True:
+        for item in search['items']:
+            song_list.append({'id':item['track']['id'],'name':item['track']['name'],'artist':item['track']['artists'][0]['name'],'album':item['track']['album']['name']})
+        if(search["next"] is None):
+            break
+        search = requests.get(search["next"], headers=headers)
+        search = search.json()
+    return song_list
+
+def get_playlists_from_user_id(user_id):
+    endpoint = "https://api.spotify.com/v1/users"
+    data = urlencode({"limit":50})
+    lookup_url = f"{endpoint+'/'+user_id+'/'+'playlists'}?{data}"
+    search = requests.get(lookup_url, headers=headers).json()
+    global playlist_list
+    playlist_list.clear()
+    while True:
+        for item in search['items']:
+            playlist_list.append({'name':item['name'],'id':item['id']})
+        if(search["next"] is None):
+            break
+        search = requests.get(search["next"], headers=headers)
+        search = search.json()
+    return playlist_list
+
+def get_playlist_name(playlist_id):
+    endpoint = "https://api.spotify.com/v1/playlists/"+playlist_id
+    data = urlencode({"playlist_id":playlist_id})
+    lookup_url = f"{endpoint}?{data}"
+    playlist_name = requests.get(lookup_url, headers=headers).json()['name']
+    return playlist_name
+
+
 def get_playlist(request):
 
-    playlist_list = list()
-    song_list = list
+    song_list = []
+    global playlist_list
+    playlist_item = ''
     if request.method == "POST":
-        if "GetUserId" in request.POST:
-            user_id = request.POST.get('UserId')
-            endpoint = "https://api.spotify.com/v1/users"
-            data = urlencode({"limit":50})
-            lookup_url = f"{endpoint+'/'+user_id+'/'+'playlists'}?{data}"
-            search = requests.get(lookup_url, headers=headers).json()
-            for item in search['items']:
-                playlist_list.append({'name':item['name'],'id':item['id']})
-
-        if "GetCurrent" in request.POST:
-            endpoint = "https://api.spotify.com/v1/users/21dmvu3cxeudjedn7ry3vn3da/playlists"
-            data = urlencode({"limit":50})
-            lookup_url = f"{endpoint}?{data}"
-            search = requests.get(lookup_url, headers=headers).json()
-            playlist_list = list()
-            for item in search['items']:
-                playlist_list.append({'name':item['name'],'id':item['id']})
+        if "CurrentUser" in request.POST or "SelectUser" in request.POST:
+            user_id = request.POST.get('UserId') if "SelectUser" in request.POST else "21dmvu3cxeudjedn7ry3vn3da"
+            playlist_list = get_playlists_from_user_id(user_id)
+            song_list = get_songs_from_playlist_id(playlist_list[0]['id'])
+            playlist_item = {'id':playlist_list[0]['id'],'name':playlist_list[0]['name']}
         
-        if "ViewPlaylist" in request.POST:
-            playlist_id = request.POST.get('ViewPlaylist')
-            endpoint = "https://api.spotify.com/v1/playlists"
-            data = urlencode({"playlist_id":playlist_id,"limit":50})
-            lookup_url = f"{endpoint+'/'+playlist_id+'/'+'tracks'}?{data}"
-            search = requests.get(lookup_url, headers=headers).json()
-            song_list = list()
-            for item in search['items']:
-                song_list.append({'id':item['track']['id'],'name':item['track']['name'],'artist':item['track']['artists'][0]['name'],'album':item['track']['album']['name']})
+        elif "ViewPlaylist" in request.POST or "SelectPlaylist" in request.POST:
             
-        if "AddPlaylist" in request.POST:
+            playlist_id = request.POST.get('ViewPlaylist') if "ViewPlaylist" in request.POST else request.POST.get('PlaylistId')
+            song_list = get_songs_from_playlist_id(playlist_id)
+            
+            for playlist in playlist_list:
+                if playlist['id'] == playlist_id:
+                    playlist_item = {'id':playlist['id'],'name':playlist['name']}
+                    # playlist_name = playlist['name']
+                    break
+            if "SelectPlaylist" in request.POST:
+                playlist_list.clear()
+                playlist_list.append({'id':playlist_id, 'name':get_playlist_name(playlist_id)})
+                playlist_item = {'id':playlist_list[0]['id'],'name':playlist_list[0]['name']}
+
+        elif "AddPlaylist" in request.POST:
+            playlist_id = request.POST.get("ID")
             playlist_name = request.POST.get("PlaylistName")
-            track_ids = request.POST.getlist('cehckedTracks')
-            if playlist_name is not None:
+            song_ids = request.POST.getlist('checkedSongs')
+            print("playlist_name: ", playlist_name)
+            print("playlist_id: ", playlist_id)
+            if playlist_id is not None:
                 if not Playlists.objects.filter(name=playlist_name).exists():
                     Playlists.objects.create(name=playlist_name, created=datetime.now())
             playlist_item = Playlists.objects.get(name=playlist_name)
+            song_list = get_songs_from_playlist_id(playlist_id)
+            print("song_list", song_list)
+            print("song_ids", song_ids)
+            print("playlist_item",playlist_item)
             for song in song_list:
-                if(song['id'] in track_ids):
+                if(song['id'] in song_ids):
                     song_item = Song.objects.filter(track_name=song['name']).filter(playlist__id=playlist_item.id)
                     if song_item.exists():
                         continue
@@ -82,7 +124,9 @@ def get_playlist(request):
                                         album_name=song['album'],
                                         playlist=playlist_item)
 
-    return render(request, 'GetPlaylists.html', context={'playlists':playlist_list, 'songs':song_list})
+    return render(request, 'GetPlaylists.html', context={'playlists':playlist_list, 
+                                                         'songs':song_list,
+                                                         'playlistItem':playlist_item})
 
 def playlists(request):
 
@@ -100,14 +144,14 @@ def playlists(request):
             playlist_name = request.POST.get('ViewPlaylist')
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
 
-        if "deleteSong" in request.POST:
+        elif "deleteSong" in request.POST:
             song_id = request.POST.get('deleteSong')
             song_item = Song.objects.get(id=song_id)
             playlist_name = song_item.playlist.name
             Song.objects.get(id=song_id).delete()
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
 
-        if "downloadSong" in request.POST:
+        elif "downloadSong" in request.POST:
             song_id = request.POST.get('downloadSong')
             song_item = Song.objects.get(id=song_id)
             ds = DownloadedSongs.objects.all()
@@ -130,7 +174,7 @@ def playlists(request):
                                                       'playlistName':playlist_name })
 
 def index(request):
-
+    # global playlist_list
     endpoint = "https://api.spotify.com/v1/search"
     playlist = Playlists.objects.all()
     songs = Song.objects.all()
