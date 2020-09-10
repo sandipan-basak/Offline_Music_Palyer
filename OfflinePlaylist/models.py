@@ -27,6 +27,7 @@ class Song(models.Model):
     track_name = models.CharField(max_length=100)
     artist_name = models.CharField(max_length=100)
     album_name = models.CharField(max_length=100)
+    video_file = models.CharField(max_length=150, null=True, default='')
     playlist = models.ForeignKey(to=Playlists, on_delete=models.CASCADE)
     downloaded = models.BooleanField(default=False)
 

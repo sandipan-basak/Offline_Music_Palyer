@@ -1,4 +1,5 @@
 import os
+import difflib
 from datetime import datetime
 from urllib.parse import urlencode
 from django.shortcuts import render, redirect
@@ -8,7 +9,7 @@ import requests
 from OfflinePlaylist.models import Track, Album, Artist, Playlists, Song, Category, DownloadedSongs
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MEDIA_DIR = os.path.join(BASE_DIR,'media')
+STATIC_DIR = os.path.join(BASE_DIR,'static')
 
 flags = [False, False, False]
 restart = [False]
@@ -72,7 +73,6 @@ def get_playlist_name(playlist_id):
     playlist_name = requests.get(lookup_url, headers=headers).json()['name']
     return playlist_name
 
-
 def get_playlist(request):
 
     song_list = []
@@ -104,16 +104,16 @@ def get_playlist(request):
             playlist_id = request.POST.get("ID")
             playlist_name = request.POST.get("PlaylistName")
             song_ids = request.POST.getlist('checkedSongs')
-            print("playlist_name: ", playlist_name)
-            print("playlist_id: ", playlist_id)
+            # print("playlist_name: ", playlist_name)
+            # print("playlist_id: ", playlist_id)
             if playlist_id is not None:
                 if not Playlists.objects.filter(name=playlist_name).exists():
                     Playlists.objects.create(name=playlist_name, created=datetime.now())
             playlist_item = Playlists.objects.get(name=playlist_name)
             song_list = get_songs_from_playlist_id(playlist_id)
-            print("song_list", song_list)
-            print("song_ids", song_ids)
-            print("playlist_item",playlist_item)
+            # print("song_list", song_list)
+            # print("song_ids", song_ids)
+            # print("playlist_item", playlist_item)
             for song in song_list:
                 if(song['id'] in song_ids):
                     song_item = Song.objects.filter(track_name=song['name']).filter(playlist__id=playlist_item.id)
@@ -143,11 +143,13 @@ def playlists(request):
         if "ViewPlaylist" in request.POST:
             playlist_name = request.POST.get('ViewPlaylist')
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
+            print(song_list)
 
         elif "deleteSong" in request.POST:
             song_id = request.POST.get('deleteSong')
             song_item = Song.objects.get(id=song_id)
             playlist_name = song_item.playlist.name
+            DownloadedSongs.objects.get(song_name=song_item.track_name, artist_name=song_item.artist_name).delete()
             Song.objects.get(id=song_id).delete()
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
 
@@ -156,8 +158,11 @@ def playlists(request):
             song_item = Song.objects.get(id=song_id)
             ds = DownloadedSongs.objects.all()
             song_item.downloaded = True
+            song_item.save()
+            print("downloaded: ",song_item)
             playlist_name = song_item.playlist.name
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
+            print("song list", song_list)
             if not ds.filter(song_name=song_item.track_name).filter(artist_name=song_item.artist_name).exists():
                 DownloadedSongs.objects.create(song_name=song_item.track_name, artist_name=song_item.artist_name)
                 search_query = song_item.track_name+'|'+song_item.artist_name
@@ -165,13 +170,23 @@ def playlists(request):
                 # pylint: disable=maybe-no-member
                 video_item = youtube.search().list(q=search_query,part='snippet',type='video',maxResults=1).execute()
                 video_link = 'https://www.youtube.com/watch?v='+video_item['items'][0]['id']['videoId']
+                # print(video_item)
+                abs_path = STATIC_DIR + '\\downloaded_songs\\'
+                video_title = YouTube(video_link).title
+                
                 stream_item = YouTube(video_link).streams.get_audio_only()
-                abs_path = MEDIA_DIR + '\\downloaded_songs\\'
+                abs_path = STATIC_DIR + '\\downloaded_songs\\'
                 stream_item.download(abs_path)
+
+                files = os.listdir(abs_path)
+                file_present = difflib.get_close_matches(video_title+".mp4", files, 1)
+                print(file_present)
+                song_item.video_file = file_present[0]
+                song_item.save()
 
     return render(request, 'playlists.html', context={'playlists':playlist,
                                                       'songs':song_list,
-                                                      'playlistName':playlist_name })
+                                                      'playlistName':playlist_name})
 
 def index(request):
     # global playlist_list
