@@ -49,7 +49,7 @@
                     </div>
                   {% else %}
                     <div class="PlaySong" style = "width:7%; height:100%; float:left;">
-                      <button type="button" onclick="enableControls()" class="playSong" name="playSong" value="{{ song.id }}"> Play </button>
+                      <button type="button" onclick="enableControls()" id="playSong" class="playSong" name="playSong" value="{{ song.id }}"> Play </button>
                     </div>
                   {% endif %}
                   <div class="CloseAudio" id="CloseAudio" style="width:7%; height:100%; float:left; display:none;">
