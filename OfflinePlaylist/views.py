@@ -1,22 +1,16 @@
 import os
-<<<<<<< HEAD
-=======
 import difflib
->>>>>>> Add_Playlist_Options
 from datetime import datetime
 from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from googleapiclient.discovery import build
 from pytube import YouTube
 import requests
-<<<<<<< HEAD
-from OfflinePlaylist.models import Track, Album, Artist, Playlists, Song, Category
-=======
+
 from OfflinePlaylist.models import Track, Album, Artist, Playlists, Song, Category, DownloadedSongs
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_DIR = os.path.join(BASE_DIR,'static')
->>>>>>> Add_Playlist_Options
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_DIR = os.path.join(BASE_DIR,'media')
@@ -42,11 +36,7 @@ def test(request):
     playlist = Playlists.objects.all()
     songs = Song.objects.all()
 
-<<<<<<< HEAD
-    return render(request, 'OfflinePlaylist/test.html', context={'playlists':playlist,
-                                                                  'songs':songs})
 
-=======
     return render(request, 'test.html', context={'playlists':playlist,
                                                  'songs':songs})
 
@@ -143,7 +133,6 @@ def get_playlist(request):
                                                          'songs':song_list,
                                                          'playlistItem':playlist_item})
 
->>>>>>> Add_Playlist_Options
 def playlists(request):
 
     api_key = 'AIzaSyCrFKxRUCg3-IVk8XX-NN4cQwTfxsZz_j8'
@@ -152,11 +141,8 @@ def playlists(request):
     playlist = Playlists.objects.all()
     song_list = ''
     youtube = build('youtube','v3',developerKey=api_key)
-<<<<<<< HEAD
 
-=======
     
->>>>>>> Add_Playlist_Options
     playlist_name = Playlists.objects.first().name
     if request.method == "POST":
      
@@ -179,18 +165,8 @@ def playlists(request):
             ds = DownloadedSongs.objects.all()
             song_item.downloaded = True
             song_item.save()
-<<<<<<< HEAD
-            search_query = song_item.track_name+'|'+song_item.artist_name
-            youtube = build('youtube','v3',developerKey=api_key)
-            # pylint: disable=maybe-no-member
-            video_item = youtube.search().list(q=search_query,part='snippet',type='video',maxResults=1).execute()
-            video_link = 'https://www.youtube.com/watch?v='+video_item['items'][0]['id']['videoId']
-            stream_item = YouTube(video_link).streams.get_audio_only()
-            abs_path = MEDIA_DIR + '\\downloaded_songs\\'
-            stream_item.download(abs_path)
-=======
+
             print("downloaded: ",song_item)
->>>>>>> Add_Playlist_Options
             playlist_name = song_item.playlist.name
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
             print("song list", song_list)
@@ -330,11 +306,8 @@ def index(request):
             for album in album_list:
                 if album.id not in album_ids:
                     album_list.get(id=album.id).delete()
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> Add_Playlist_Options
+
             return redirect('/')
 
         elif 'AddSong' in request.POST:
@@ -359,11 +332,7 @@ def index(request):
                 return redirect('/')
 
             for track_id in track_ids:
-<<<<<<< HEAD
-                track_item = Track.objects.get(id=track_id)              
-=======
                 track_item = Track.objects.get(id=track_id)
->>>>>>> Add_Playlist_Options
 
                 for playlist in playlist_list:
                     playlist_item = Playlists.objects.get(name=playlist)
@@ -378,11 +347,7 @@ def index(request):
 
             restart[0] = True
             return redirect('/')
-<<<<<<< HEAD
-            
-=======
      
->>>>>>> Add_Playlist_Options
     return render(request, 'index.html', context={'tracks':track_list,
                                                   'artists':artist_list,
                                                   'albums':album_list,
