@@ -1,3 +1,4 @@
 *.mp3
 *.mp4
 downloaded_songs/
+__pycache__/
