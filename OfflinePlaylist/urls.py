@@ -5,7 +5,8 @@ from OfflinePlaylist import views
 app_name = 'OfflinePlaylist'
 
 urlpatterns = [
-    path(r'^$', views.index, name="index"),
-    path(r'^playlists/', views.playlists, name = 'playlist'),
-    path(r'^test/', views.test, name = 'test'),
+    path('', views.index, name="index"),
+    path('playlists/', views.playlists, name='playlists'),
+    path('test/', views.test, name='test'),
+    path('GetPlaylists/', views.get_playlist, name='GetPlaylists'),
 ]

@@ -103,6 +103,9 @@
     <title>Search</title>
 </head>
 <body>
+    <div style="height:30px">
+        <button><a href="{% url 'OfflinePlaylist:GetPlaylists' %}">Download Playlists... </a></button>
+    </div>
     <h1>Search Page</h1>
     <form action="" method="POST">
     {% csrf_token %}

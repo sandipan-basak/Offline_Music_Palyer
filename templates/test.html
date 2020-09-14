@@ -104,11 +104,10 @@
     <title>Document</title>
 </head>
 <body>
-
+    {% load static %}
     <h2> Playlist Form</h2> 
     <!--Step 1:Adding HTML-->
     <button onclick=OpenPopUp() style="width:auto;">Sign Up</button> 
-  
     <div id="id01" class="modal"> 
         <!-- <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">X</span>  -->
         <form class="modal-content animate" action="">
@@ -123,14 +122,19 @@
                         <button type="button" onclick="openText()" id="AddPlaylist" class="AddPlaylist">Create a new Playlist</button> 
                     </div>
                 </div>
-
                 <div class="clearfix"> 
                     <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button> 
                     <button type="submit" class="signupbtn">Add Songs</button> 
                 </div> 
             </div> 
         </form> 
-    </div> 
+        <audio controls>
+            <!-- <source src="{%static "downloaded_songs/J Han - A Breath (featCL & Sam Ock).mp4" %}" type="audio/mpeg"> -->
+            {% with 'downloaded_songs/'|add:'Mac Miller - Cinderella (feat Ty Dolla $ign)'|add:'.mp4' as audio_static %}
+            <source src="{%static audio_static %}" type="audio/mpeg">
+            {% endwith %}
+        </audio>
+    </div>
     
 
     

@@ -1,11 +1,22 @@
 import os
+<<<<<<< HEAD
+=======
+import difflib
+>>>>>>> Add_Playlist_Options
 from datetime import datetime
 from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from googleapiclient.discovery import build
 from pytube import YouTube
 import requests
+<<<<<<< HEAD
 from OfflinePlaylist.models import Track, Album, Artist, Playlists, Song, Category
+=======
+from OfflinePlaylist.models import Track, Album, Artist, Playlists, Song, Category, DownloadedSongs
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_DIR = os.path.join(BASE_DIR,'static')
+>>>>>>> Add_Playlist_Options
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_DIR = os.path.join(BASE_DIR,'media')
@@ -13,13 +24,126 @@ MEDIA_DIR = os.path.join(BASE_DIR,'media')
 flags = [False, False, False]
 restart = [False]
 
+API_ENDPOINT = "https://accounts.spotify.com/api/token"
+
+client_data = {'scope':'user-library-read playlist-read-private playlist-modify-private playlist-modify-public playlist-read-collaborative',
+               'client_id':'2e872b10213743bfb2e15254bbfd36f7', 
+               'client_secret':'409874318f474150a77c015c565e3747', 
+               'grant_type':'client_credentials' }
+r = requests.post(url = API_ENDPOINT, data = client_data) 
+headers = {
+    "Authorization": f"Bearer {r.json()['access_token']}"
+}
+
+playlist_list = []
+
 def test(request):
+    
     playlist = Playlists.objects.all()
     songs = Song.objects.all()
 
+<<<<<<< HEAD
     return render(request, 'OfflinePlaylist/test.html', context={'playlists':playlist,
                                                                   'songs':songs})
 
+=======
+    return render(request, 'test.html', context={'playlists':playlist,
+                                                 'songs':songs})
+
+def get_songs_from_playlist_id(playlist_id):
+    endpoint = "https://api.spotify.com/v1/playlists"
+    data = urlencode({"playlist_id":playlist_id,"limit":100})
+    lookup_url = f"{endpoint+'/'+playlist_id+'/'+'tracks'}?{data}"
+    search = requests.get(lookup_url, headers=headers).json()
+    song_list = []
+    while True:
+        for item in search['items']:
+            song_list.append({'id':item['track']['id'],'name':item['track']['name'],'artist':item['track']['artists'][0]['name'],'album':item['track']['album']['name']})
+        if(search["next"] is None):
+            break
+        search = requests.get(search["next"], headers=headers)
+        search = search.json()
+    return song_list
+
+def get_playlists_from_user_id(user_id):
+    endpoint = "https://api.spotify.com/v1/users"
+    data = urlencode({"limit":50})
+    lookup_url = f"{endpoint+'/'+user_id+'/'+'playlists'}?{data}"
+    search = requests.get(lookup_url, headers=headers).json()
+    global playlist_list
+    playlist_list.clear()
+    while True:
+        for item in search['items']:
+            playlist_list.append({'name':item['name'],'id':item['id']})
+        if(search["next"] is None):
+            break
+        search = requests.get(search["next"], headers=headers)
+        search = search.json()
+    return playlist_list
+
+def get_playlist_name(playlist_id):
+    endpoint = "https://api.spotify.com/v1/playlists/"+playlist_id
+    data = urlencode({"playlist_id":playlist_id})
+    lookup_url = f"{endpoint}?{data}"
+    playlist_name = requests.get(lookup_url, headers=headers).json()['name']
+    return playlist_name
+
+def get_playlist(request):
+
+    song_list = []
+    global playlist_list
+    playlist_item = ''
+    if request.method == "POST":
+        if "CurrentUser" in request.POST or "SelectUser" in request.POST:
+            user_id = request.POST.get('UserId') if "SelectUser" in request.POST else "21dmvu3cxeudjedn7ry3vn3da"
+            playlist_list = get_playlists_from_user_id(user_id)
+            song_list = get_songs_from_playlist_id(playlist_list[0]['id'])
+            playlist_item = {'id':playlist_list[0]['id'],'name':playlist_list[0]['name']}
+        
+        elif "ViewPlaylist" in request.POST or "SelectPlaylist" in request.POST:
+            
+            playlist_id = request.POST.get('ViewPlaylist') if "ViewPlaylist" in request.POST else request.POST.get('PlaylistId')
+            song_list = get_songs_from_playlist_id(playlist_id)
+            
+            for playlist in playlist_list:
+                if playlist['id'] == playlist_id:
+                    playlist_item = {'id':playlist['id'],'name':playlist['name']}
+                    # playlist_name = playlist['name']
+                    break
+            if "SelectPlaylist" in request.POST:
+                playlist_list.clear()
+                playlist_list.append({'id':playlist_id, 'name':get_playlist_name(playlist_id)})
+                playlist_item = {'id':playlist_list[0]['id'],'name':playlist_list[0]['name']}
+
+        elif "AddPlaylist" in request.POST:
+            playlist_id = request.POST.get("ID")
+            playlist_name = request.POST.get("PlaylistName")
+            song_ids = request.POST.getlist('checkedSongs')
+            # print("playlist_name: ", playlist_name)
+            # print("playlist_id: ", playlist_id)
+            if playlist_id is not None:
+                if not Playlists.objects.filter(name=playlist_name).exists():
+                    Playlists.objects.create(name=playlist_name, created=datetime.now())
+            playlist_item = Playlists.objects.get(name=playlist_name)
+            song_list = get_songs_from_playlist_id(playlist_id)
+            # print("song_list", song_list)
+            # print("song_ids", song_ids)
+            # print("playlist_item", playlist_item)
+            for song in song_list:
+                if(song['id'] in song_ids):
+                    song_item = Song.objects.filter(track_name=song['name']).filter(playlist__id=playlist_item.id)
+                    if song_item.exists():
+                        continue
+                    Song.objects.create(track_name=song['name'], 
+                                        artist_name=song['artist'],
+                                        album_name=song['album'],
+                                        playlist=playlist_item)
+
+    return render(request, 'GetPlaylists.html', context={'playlists':playlist_list, 
+                                                         'songs':song_list,
+                                                         'playlistItem':playlist_item})
+
+>>>>>>> Add_Playlist_Options
 def playlists(request):
 
     api_key = 'AIzaSyCrFKxRUCg3-IVk8XX-NN4cQwTfxsZz_j8'
@@ -28,28 +152,34 @@ def playlists(request):
     playlist = Playlists.objects.all()
     song_list = ''
     youtube = build('youtube','v3',developerKey=api_key)
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> Add_Playlist_Options
     playlist_name = Playlists.objects.first().name
     if request.method == "POST":
      
         if "ViewPlaylist" in request.POST:
             playlist_name = request.POST.get('ViewPlaylist')
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
+            print(song_list)
 
-        if "deleteSong" in request.POST:
+        elif "deleteSong" in request.POST:
             song_id = request.POST.get('deleteSong')
-            print("song_id: ", song_id)
             song_item = Song.objects.get(id=song_id)
             playlist_name = song_item.playlist.name
-            print("playlist_name: ", playlist_name)
+            DownloadedSongs.objects.get(song_name=song_item.track_name, artist_name=song_item.artist_name).delete()
             Song.objects.get(id=song_id).delete()
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
 
-        if "downloadSong" in request.POST:
+        elif "downloadSong" in request.POST:
             song_id = request.POST.get('downloadSong')
             song_item = Song.objects.get(id=song_id)
+            ds = DownloadedSongs.objects.all()
             song_item.downloaded = True
             song_item.save()
+<<<<<<< HEAD
             search_query = song_item.track_name+'|'+song_item.artist_name
             youtube = build('youtube','v3',developerKey=api_key)
             # pylint: disable=maybe-no-member
@@ -58,24 +188,39 @@ def playlists(request):
             stream_item = YouTube(video_link).streams.get_audio_only()
             abs_path = MEDIA_DIR + '\\downloaded_songs\\'
             stream_item.download(abs_path)
+=======
+            print("downloaded: ",song_item)
+>>>>>>> Add_Playlist_Options
             playlist_name = song_item.playlist.name
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
+            print("song list", song_list)
+            if not ds.filter(song_name=song_item.track_name).filter(artist_name=song_item.artist_name).exists():
+                DownloadedSongs.objects.create(song_name=song_item.track_name, artist_name=song_item.artist_name)
+                search_query = song_item.track_name+'|'+song_item.artist_name
+                youtube = build('youtube','v3',developerKey=api_key)
+                # pylint: disable=maybe-no-member
+                video_item = youtube.search().list(q=search_query,part='snippet',type='video',maxResults=1).execute()
+                video_link = 'https://www.youtube.com/watch?v='+video_item['items'][0]['id']['videoId']
+                # print(video_item)
+                abs_path = STATIC_DIR + '\\downloaded_songs\\'
+                video_title = YouTube(video_link).title
+                
+                stream_item = YouTube(video_link).streams.get_audio_only()
+                abs_path = STATIC_DIR + '\\downloaded_songs\\'
+                stream_item.download(abs_path)
+
+                files = os.listdir(abs_path)
+                file_present = difflib.get_close_matches(video_title+".mp4", files, 1)
+                print(file_present)
+                song_item.video_file = file_present[0]
+                song_item.save()
 
     return render(request, 'playlists.html', context={'playlists':playlist,
-                                                                  'songs':song_list,
-                                                                  "playlistName":playlist_name })
+                                                      'songs':song_list,
+                                                      'playlistName':playlist_name})
 
 def index(request):
-
-    API_ENDPOINT = "https://accounts.spotify.com/api/token"
-
-    data = {'client_id':'2e872b10213743bfb2e15254bbfd36f7', 
-            'client_secret':'409874318f474150a77c015c565e3747', 
-            'grant_type':'client_credentials' }
-    r = requests.post(url = API_ENDPOINT, data = data) 
-    headers = {
-        "Authorization": f"Bearer {r.json()['access_token']}"
-    }
+    # global playlist_list
     endpoint = "https://api.spotify.com/v1/search"
     playlist = Playlists.objects.all()
     songs = Song.objects.all()
@@ -87,8 +232,6 @@ def index(request):
     else:
         Category.objects.create(name='Track')
         category = Category.objects.first()
-    print(category)
-
 
     if request.method == "POST":
         if 'selectCategory' in request.POST:
@@ -187,7 +330,11 @@ def index(request):
             for album in album_list:
                 if album.id not in album_ids:
                     album_list.get(id=album.id).delete()
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> Add_Playlist_Options
             return redirect('/')
 
         elif 'AddSong' in request.POST:
@@ -212,7 +359,11 @@ def index(request):
                 return redirect('/')
 
             for track_id in track_ids:
+<<<<<<< HEAD
                 track_item = Track.objects.get(id=track_id)              
+=======
+                track_item = Track.objects.get(id=track_id)
+>>>>>>> Add_Playlist_Options
 
                 for playlist in playlist_list:
                     playlist_item = Playlists.objects.get(name=playlist)
@@ -227,14 +378,16 @@ def index(request):
 
             restart[0] = True
             return redirect('/')
+<<<<<<< HEAD
             
+=======
+     
+>>>>>>> Add_Playlist_Options
     return render(request, 'index.html', context={'tracks':track_list,
-                                                                  'artists':artist_list,
-                                                                  'albums':album_list,
-                                                                  'category':category,
-                                                                  'flags':flags,
-                                                                  'playlists':playlist,
-                                                                  'songs':songs,
-                                                                  'restart':restart})
-
-
+                                                  'artists':artist_list,
+                                                  'albums':album_list,
+                                                  'category':category,
+                                                  'flags':flags,
+                                                  'playlists':playlist,
+                                                  'songs':songs,
+                                                  'restart':restart})

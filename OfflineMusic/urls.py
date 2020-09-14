@@ -14,14 +14,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-# from django.conf.urls import include#, url
+from django.conf.urls import include#, url
 from django.urls import path
-from OfflinePlaylist import views
+# from OfflinePlaylist import views
+
+app_name = 'OfflinePlaylist'
 
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('', include('OfflinePlaylist.urls', namespace='index')),
+    path('OFflinePlaylist/', include('OfflinePlaylist.urls')),
     path('admin/', admin.site.urls),
-    path('playlists/', views.playlists, name = 'playlist'),
-    path('test/', views.test, name = 'test'),
-    #path(r'^OfflinePlaylist/', include('OfflinePlaylist.urls')),
+    # path('test/', include('OfflinePlaylist.urls', namespace='test')),
+    # path('GetPlaylists/', include('OfflinePlaylist.urls', namespace='get_playlists')),
 ]
