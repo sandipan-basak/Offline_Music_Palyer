@@ -6,10 +6,10 @@
     <title>Playlists</title>
 </head>
 <body>
+  <a href="{% url 'OfflinePlaylist:index' %}"><button>Download Music</button></a>
   {% load static %}
   <form action="" method="POST">
     {% csrf_token %}
-
     <div class="contianter">
       <div style="width: 20%; float: left;" class="PlasylistDisplay">
         <h2>Playlists</h2>
