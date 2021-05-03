@@ -1,6 +1,6 @@
 # Offline Music Playlist
 
-# Start the app locally
+Start the app locally
 
 Steps below:
 
