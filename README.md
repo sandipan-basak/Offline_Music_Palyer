@@ -12,6 +12,10 @@ Create a virtual environment and activate it:
 
 `python -m virtualenv musicland`
 
+Download all required packages for the app to run
+
+`pip install -r requiement.txt`
+
 Make all the database migrations necessary for the app to properly initailize:
 
 `python manage.py makemigrations`
