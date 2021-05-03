@@ -2,12 +2,13 @@ import os
 import difflib
 from datetime import datetime
 from urllib.parse import urlencode
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from googleapiclient.discovery import build
 from pytube import YouTube
 import requests
 
-from OfflinePlaylist.models import Track, Album, Artist, Playlists, Song, Category, DownloadedSongs
+from django.views.generic import DetailView
+from OfflinePlaylist.models import Track, Album, Artist, Playlists, Song, Category#, DownloadedSongs
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_DIR = os.path.join(BASE_DIR,'static')
@@ -155,23 +156,25 @@ def playlists(request):
             song_id = request.POST.get('deleteSong')
             song_item = Song.objects.get(id=song_id)
             playlist_name = song_item.playlist.name
-            DownloadedSongs.objects.get(song_name=song_item.track_name, artist_name=song_item.artist_name).delete()
             Song.objects.get(id=song_id).delete()
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
+            path = STATIC_DIR + '/downloaded_songs/'
+            mp4 = path + song_item.video_file
+            if Song.objects.filter(track_name=song_item.track_name).count() == 0:
+                if  os.path.exists(mp4):
+                    os.remove(mp4)
+            print(os.path.exists(mp4)) 
 
         elif "downloadSong" in request.POST:
             song_id = request.POST.get('downloadSong')
             song_item = Song.objects.get(id=song_id)
-            ds = DownloadedSongs.objects.all()
-            song_item.downloaded = True
+            # ds = DownloadedSongs.objects.all()
+            # song_item.downloaded = True
             song_item.save()
-
-            print("downloaded: ",song_item)
             playlist_name = song_item.playlist.name
             song_list = Playlists.objects.get(name=playlist_name).song_set.all()
-            print("song list", song_list)
-            if not ds.filter(song_name=song_item.track_name).filter(artist_name=song_item.artist_name).exists():
-                DownloadedSongs.objects.create(song_name=song_item.track_name, artist_name=song_item.artist_name)
+            if not song_item.downloaded:
+                # DownloadedSongs.objects.create(song_name=song_item.track_name, artist_name=song_item.artist_name)
                 search_query = song_item.track_name+'|'+song_item.artist_name
                 youtube = build('youtube','v3',developerKey=api_key)
                 # pylint: disable=maybe-no-member
@@ -179,6 +182,7 @@ def playlists(request):
                 video_link = 'https://www.youtube.com/watch?v='+video_item['items'][0]['id']['videoId']
                 # print(video_item)
                 abs_path = STATIC_DIR + '\\downloaded_songs\\'
+                
                 video_title = YouTube(video_link).title
                 
                 stream_item = YouTube(video_link).streams.get_audio_only()
@@ -187,9 +191,15 @@ def playlists(request):
 
                 files = os.listdir(abs_path)
                 file_present = difflib.get_close_matches(video_title+".mp4", files, 1)
-                print(file_present)
-                song_item.video_file = file_present[0]
-                song_item.save()
+                
+                for song in Song.objects.filter(track_name=song_item.track_name):
+                    song.video_file = file_present[0]
+                    song.downloaded = True
+                    song.save()
+
+        elif "ViewS" in request.POST:
+            song = request.POST.get('ViewS')
+            return redirect('OfflinePlaylist:curr_song', song)
 
     return render(request, 'playlists.html', context={'playlists':playlist,
                                                       'songs':song_list,
@@ -356,3 +366,11 @@ def index(request):
                                                   'playlists':playlist,
                                                   'songs':songs,
                                                   'restart':restart})
+
+def song_view(request, pk):
+    
+    song = get_object_or_404(Song, pk=pk)
+    template_name = 'song_view.html'
+    print(song.id)
+
+    return render(request, template_name, {'song_link':'downloaded_songs/'+song.video_file})

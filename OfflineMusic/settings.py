@@ -22,7 +22,9 @@ MEDIA_DIR = os.path.join(BASE_DIR,'media')
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'w&9m!#@wovn%x^l#4j%2=scq9w4j4n7!!$6fm7mb&7a&*3^a#v'
+SECRET_KEY = "w&9m!#@wovn%x^l#4j%2=scq9w4j4n7!!$6fm7mb&7a&*3^a#v"
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 
 # SECURITY WARNING: don't run with debug turned on in production!

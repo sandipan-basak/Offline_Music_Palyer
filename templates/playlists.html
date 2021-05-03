@@ -10,15 +10,7 @@
   <form action="" method="POST">
     {% csrf_token %}
 
-    <div class="contianter" >
-      {{song.video_file}}
-      <div class="AudioControls" id="audio" style="width:100%; height:100%; float:left; display:none;">
-        <audio controls id="Contols">
-          {% with 'downloaded_songs/'|add:song.video_file as audio_static %}
-          <source src="{%static audio_static %}" type="audio/mpeg">
-          {% endwith %}
-        </audio>
-      </div>
+    <div class="contianter">
       <div style="width: 20%; float: left;" class="PlasylistDisplay">
         <h2>Playlists</h2>
         <div class="list">
@@ -31,31 +23,29 @@
         {% if songs|length > 0 %}
           <h2>Playlist: {{ playlistName }}</h2>
           <h3>Name - Artist - Album</h3>
-          {% for song in songs %}
-          
+          {% for song in songs %}  
           <ul style="list-style-type: none;">
             <li style="width:100%">
-              <div class="SongItem" style="width: 100%; height: 30px; margin:0; padding:3;">
+              <div class="SongItem" style="width: 100%; height: 40px; margin:0; padding:3;">
                 <div class="SongName" style = "width:50%; height:100%; float:left;">
                   <p class="SongId" style="margin:0;">{{song.track_name}} - {{song.artist_name}} - {{song.album_name}}</p> 
                 </div>
                 <div class="ModifySong" style = "width:50%; height:100%; float:right; padding:1">
-                  <div class="DeleteSong" style = "width:7%; height:100%; float:left;">
-                    <button type="submit" class="deleteSong" name="deleteSong" value="{{ song.id }}"> X </button>
-                  </div>
                   {% if song.downloaded == False %}
-                    <div class="DownloadSong" style = "width:7%; height:100%; float:left;">
-                      <button type="submit" class="downloadSong" name="downloadSong" value="{{ song.id }}"> D </button>
+                    <div class="DownloadSong" style = "height:100%; margin-right: 5px; float:right;">
+                      <button type="submit" class="downloadSong" name="downloadSong" value="{{ song.id }}"> Download </button>
                     </div>
                   {% else %}
-                    <div class="PlaySong" style = "width:7%; height:100%; float:left;">
-                      <button type="button" onclick="enableControls()" id="playSong" class="playSong" name="playSong" value="{{ song.id }}"> Play </button>
+                    <div class="PlaySong" style = "height:100%; margin: 2px;  float:right;">
+                      <button type="submit" id="playSong" class="playSong" name="ViewS" value="{{ song.id }}"> Play </button>
                     </div>
                   {% endif %}
-                  <div class="CloseAudio" id="CloseAudio" style="width:7%; height:100%; float:left; display:none;">
-                    <button type="button" onclick="closeAudioControls()"> X </button>
+                  <div class="DeleteSong" style = "height:100%; margin: 2px; float:right;">
+                    <button type="submit" class="deleteSong" name="deleteSong" value="{{ song.id }}"> Delete </button>
                   </div>
-
+                  <!-- <div class="CloseAudio" id="CloseAudio" style="width:7%; height:100%; float:left; display:none;">
+                    <button type="button" onclick="closeAudioControls()"> X </button>
+                  </div> -->
                 </div>
               </div>
             </li>
@@ -69,22 +59,22 @@
     </div>
   </form>
   <script>
-    function enableControls(){
-      var a = document.getElementById("audio");
-      a.style.display = 'block';
-      var b = document.getElementById("CloseAudio");
-      b.style.display = 'block';
-      var audio = document.getElementById("Controls")
-      audio.pause();
-    }
-    function closeAudioControls(){
-      var b = document.getElementById("CloseAudio");
-      b.style.display = 'none';
-      var a = document.getElementById("audio");
-      a.style.display = 'none';
-      var audio = document.getElementById("Controls")
-      audio.pause();
-    }
+    // function enableControls(){
+    //   var a = document.getElementById("audio");
+    //   a.style.display = 'block';
+    //   var b = document.getElementById("CloseAudio");
+    //   b.style.display = 'block';
+    //   var audio = document.getElementById("Controls")
+    //   audio.pause();
+    // }
+    // function closeAudioControls(){
+    //   var b = document.getElementById("CloseAudio");
+    //   b.style.display = 'none';
+    //   var a = document.getElementById("audio");
+    //   a.style.display = 'none';
+    //   var audio = document.getElementById("Controls")
+    //   audio.pause();
+    // }
   </script>
 </body>
 </html>
