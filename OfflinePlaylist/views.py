@@ -181,14 +181,10 @@ def playlists(request):
                 video_item = youtube.search().list(q=search_query,part='snippet',type='video',maxResults=1).execute()
                 video_link = 'https://www.youtube.com/watch?v='+video_item['items'][0]['id']['videoId']
                 # print(video_item)
-                abs_path = STATIC_DIR + '\\downloaded_songs\\'
-                
+                abs_path = STATIC_DIR + '/downloaded_songs/'
                 video_title = YouTube(video_link).title
-                
                 stream_item = YouTube(video_link).streams.get_audio_only()
-                abs_path = STATIC_DIR + '\\downloaded_songs\\'
                 stream_item.download(abs_path)
-
                 files = os.listdir(abs_path)
                 file_present = difflib.get_close_matches(video_title+".mp4", files, 1)
                 
