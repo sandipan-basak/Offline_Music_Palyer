@@ -1,6 +1,6 @@
 # Offline Music Playlist
 
-Steps tp start the app locally:
+Steps the start the app locally:
 
 1. Clone the repo:
 
