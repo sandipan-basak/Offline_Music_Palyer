@@ -136,7 +136,7 @@ def get_playlist(request):
 
 def playlists(request):
 
-    api_key = 'AIzaSyCrFKxRUCg3-IVk8XX-NN4cQwTfxsZz_j8'
+    api_key = 'AIzaSyB8yOuNdpcUpjV3ilOJbrdZtrey9BHNStA'
     youtube = build('youtube','v3',developerKey=api_key)
 
     playlist = Playlists.objects.all()
